@@ -1,0 +1,60 @@
+#################################################################################
+#	Makefile for C project running on the REPTAR board in standalone 	#
+#################################################################################
+BUILDDIR=build
+OUTNAME=$(BUILDDIR)/labo_asp
+
+NM			= $(TOOL_PREFIX)-nm
+AR			= $(TOOL_PREFIX)-ar
+LD			= $(TOOL_PREFIX)-ld
+ASM			= $(TOOL_PREFIX)-as
+CC			= $(TOOL_PREFIX)-gcc
+STRIP		= $(TOOL_PREFIX)-strip
+OBJCOPY		= $(TOOL_PREFIX)-objcopy
+OBJDUMP		= $(TOOL_PREFIX)-objdump
+LIBGCC		= $(shell $(CC) --print-libgcc-file-name)
+
+TOOL_PREFIX	:= arm-none-eabi
+CFLAGS		:= -c -Wall -O0 -g -I. -I/opt/cc/$(TOOL_PREFIX)/include
+CRT0		:= crt0_arm.o
+LDFLAGS		:= -e start  -T standalone.ld -static  -lc -L.
+
+OBJS		:= $(CRT0) newlib_stubs.o main.o init.o lcd_toolbox.o gpio_toolbdox.o
+OBJS		:= $(patsubst %, $(BUILDDIR)/%, $(OBJS))
+
+
+
+all: dir $(BUILDDIR)/main
+
+dir:
+	mkdir -p $(BUILDDIR)
+
+#####
+#
+# main:
+# Top level target builds for main
+#
+$(BUILDDIR)/main: $(OBJS)
+	$(CC) $(LDFLAGS) -o $(BUILDDIR)/labo_asp.elf $(OBJS)
+	$(NM) --numeric-sort $(OUTNAME).elf > $(OUTNAME).sym
+	$(OBJDUMP) --source --disassemble $(OUTNAME).elf > $(OUTNAME).dis
+
+#####
+#
+# Miscellaneous rules:
+#
+clean:
+	rm -f *.o labo_asp.elf labo_asp.dis labo_asp.sym symtbl
+	rm -rf $(BUILDDIR)/
+
+#####
+#
+# Objects:
+#
+$(BUILDDIR)/crt0_arm.o: crt0_arm.S
+	$(CC) $(CFLAGS) -D __ASSEMBLY__ -o $(BUILDDIR)/crt0_arm.o crt0_arm.S
+	
+
+$(BUILDDIR)/%.o: %.c
+	$(CC) $(CFLAGS) -o $@ $<
+

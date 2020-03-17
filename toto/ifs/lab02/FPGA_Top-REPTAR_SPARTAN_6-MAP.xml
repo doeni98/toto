@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<LogisimGoesFPGABoardMapInformation>
+<GlobalMapInformation BoardName="REPTAR_SPARTAN_6" ToplevelCircuitName="FPGA_Top"/>
+<MAPPEDCOMPONENT_1 Height="20" Key="BUTTON: /SW1" LocationX="496" LocationY="247" Width="20"/>
+<MAPPEDCOMPONENT_2 Height="20" Key="BUTTON: /SW2" LocationX="531" LocationY="298" Width="20"/>
+<MAPPEDCOMPONENT_3 Height="20" Key="BUTTON: /SW3" LocationX="563" LocationY="246" Width="20"/>
+<MAPPEDCOMPONENT_4 Height="20" Key="BUTTON: /SW4" LocationX="528" LocationY="198" Width="20"/>
+<MAPPEDCOMPONENT_5 Height="20" Key="BUTTON: /SW5" LocationX="528" LocationY="247" Width="20"/>
+<MAPPEDCOMPONENT_6 Height="20" Key="BUTTON: /SW6" LocationX="463" LocationY="293" Width="20"/>
+<MAPPEDCOMPONENT_7 Height="20" Key="BUTTON: /SW7" LocationX="464" LocationY="246" Width="20"/>
+<MAPPEDCOMPONENT_8 Height="20" Key="BUTTON: /SW8" LocationX="464" LocationY="197" Width="20"/>
+<MAPPEDCOMPONENT_9 Height="20" Key="BUTTON: /SW_reset" LocationX="170" LocationY="93" Width="15"/>
+<MAPPEDCOMPONENT_a Height="12" Key="LED: /LED0" LocationX="593" LocationY="204" Width="14"/>
+<MAPPEDCOMPONENT_b Height="12" Key="LED: /LED1" LocationX="593" LocationY="219" Width="14"/>
+<MAPPEDCOMPONENT_c Height="12" Key="LED: /LED2" LocationX="593" LocationY="234" Width="14"/>
+<MAPPEDCOMPONENT_d Height="12" Key="LED: /LED3" LocationX="593" LocationY="249" Width="14"/>
+<MAPPEDCOMPONENT_e Height="12" Key="LED: /LED4" LocationX="593" LocationY="264" Width="14"/>
+<MAPPEDCOMPONENT_f Height="12" Key="LED: /LED5" LocationX="593" LocationY="279" Width="14"/>
+<MAPPEDCOMPONENT_10 Height="12" Key="LED: /LED6" LocationX="593" LocationY="294" Width="14"/>
+<MAPPEDCOMPONENT_11 Height="12" Key="LED: /LED7" LocationX="593" LocationY="309" Width="14"/>
+<MAPPEDCOMPONENT_12 Height="200" Key="LOCALBUS: /LocalBus" LocationX="626" LocationY="45" Width="15"/>
+<MAPPEDCOMPONENT_13 Height="23" Key="SEVENSEGMENT: /Aff_7seg_1" LocationX="417" LocationY="156" Width="35"/>
+<MAPPEDCOMPONENT_14 Height="23" Key="SEVENSEGMENT: /Aff_7seg_3" LocationX="417" LocationY="99" Width="35"/>
+</LogisimGoesFPGABoardMapInformation>

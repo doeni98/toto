@@ -1,0 +1,6 @@
+reptar_io_fpga_sp3.c:44:5:reptar_io_fpga_sp3	16	static
+reptar_io_fpga_sp3.c:97:9:read_cst	4	static
+reptar_io_fpga_sp3.c:102:9:read_sw_10_5	16	static
+reptar_io_fpga_sp3.c:113:6:add_leds_red	24	static
+reptar_io_fpga_sp3.c:130:6:write_leds_red	16	static
+reptar_io_fpga_sp3.c:142:6:write_leds_green	16	static

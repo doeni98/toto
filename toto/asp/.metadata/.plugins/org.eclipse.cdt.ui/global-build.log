@@ -1,0 +1,133 @@
+14:03:02 **** Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -D __ASSEMBLY__ -o build/crt0_arm.o crt0_arm.S
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/newlib_stubs.o newlib_stubs.c
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/main.o main.c
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:22:13 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+13:45:21 **** Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/main.o main.c
+main.c: In function 'main':
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+main.c:46:2: warning: pointer targets in passing argument 1 of 'fb_print_string' differ in signedness
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+lcd_toolbox.h:30:13: note: expected 'uchar *' but argument is of type 'char *'
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+13:47:02 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+13:52:22 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/main.o main.c
+main.c: In function 'main':
+main.c:47:2: warning: pointer targets in passing argument 1 of 'fb_print_string' differ in signedness
+lcd_toolbox.h:30:13: note: expected 'uchar *' but argument is of type 'char *'
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+13:54:03 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+13:56:40 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/main.o main.c
+main.c: In function 'main':
+main.c:54:2: warning: pointer targets in passing argument 1 of 'fb_print_string' differ in signedness
+lcd_toolbox.h:30:13: note: expected 'uchar *' but argument is of type 'char *'
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+13:58:27 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:00:31 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:01:22 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:03:11 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:08:43 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:13:41 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:15:10 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:22:14 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/main.o main.c
+main.c: In function 'main':
+main.c:54:2: warning: pointer targets in passing argument 1 of 'fb_print_string' differ in signedness
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+lcd_toolbox.h:30:13: note: expected 'uchar *' but argument is of type 'char *'
+lcd_toolbox.c: In function 'fb_draw_frame':
+lcd_toolbox.c:148:3: error: stray '\243' in program
+make: *** [build/lcd_toolbox.o] Error 1
+14:22:30 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+14:38:42 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+lcd_toolbox.c: In function 'fb_draw_line':
+lcd_toolbox.c:161:6: warning: unused variable 'delta'
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o  build/gpio_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis

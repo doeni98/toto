@@ -1,0 +1,736 @@
+   1              	 .arch armv5
+   2              	 .fpu softvfp
+   3              	 .eabi_attribute 20,1
+   4              	 .eabi_attribute 21,1
+   5              	 .eabi_attribute 23,3
+   6              	 .eabi_attribute 24,1
+   7              	 .eabi_attribute 25,1
+   8              	 .eabi_attribute 26,2
+   9              	 .eabi_attribute 30,6
+  10              	 .eabi_attribute 34,0
+  11              	 .eabi_attribute 18,4
+  12              	 .file "stubs.c"
+  13              	 .text
+  14              	.Ltext0:
+  15              	 .cfi_sections .debug_frame
+  16              	 .section .text.dummy,"ax",%progbits
+  17              	 .align 2
+  18              	 .global dummy
+  20              	dummy:
+  21              	.LFB149:
+  22              	 .file 1 "stubs.c"
+   1:stubs.c       **** #include <common.h>
+   2:stubs.c       **** #include <exports.h>
+   3:stubs.c       **** #include <linux/compiler.h>
+   4:stubs.c       **** 
+   5:stubs.c       **** #define FO(x) offsetof(struct jt_funcs, x)
+   6:stubs.c       **** #if defined(CONFIG_X86)
+   7:stubs.c       **** /*
+   8:stubs.c       ****  * x86 does not have a dedicated register to store the pointer to
+   9:stubs.c       ****  * the global_data. Thus the jump table address is stored in a
+  10:stubs.c       ****  * global variable, but such approach does not allow for execution
+  11:stubs.c       ****  * from flash memory. The global_data address is passed as argv[-1]
+  12:stubs.c       ****  * to the application program.
+  13:stubs.c       ****  */
+  14:stubs.c       **** static struct jt_funcs *jt;
+  15:stubs.c       **** gd_t *global_data;
+  16:stubs.c       **** 
+  17:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+  18:stubs.c       **** 	asm volatile (			\
+  19:stubs.c       **** "	.globl " #x "\n"		\
+  20:stubs.c       **** #x ":\n"				\
+  21:stubs.c       **** "	movl	%0, %%eax\n"		\
+  22:stubs.c       **** "	movl	jt, %%ecx\n"		\
+  23:stubs.c       **** "	jmp	*(%%ecx, %%eax)\n"	\
+  24:stubs.c       **** 	: : "i"(FO(x)) : "eax", "ecx");
+  25:stubs.c       **** #elif defined(CONFIG_PPC)
+  26:stubs.c       **** /*
+  27:stubs.c       ****  * r2 holds the pointer to the global_data, r11 is a call-clobbered
+  28:stubs.c       ****  * register
+  29:stubs.c       ****  */
+  30:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+  31:stubs.c       **** 	asm volatile (			\
+  32:stubs.c       **** "	.globl " #x "\n"		\
+  33:stubs.c       **** #x ":\n"				\
+  34:stubs.c       **** "	lwz	%%r11, %0(%%r2)\n"	\
+  35:stubs.c       **** "	lwz	%%r11, %1(%%r11)\n"	\
+  36:stubs.c       **** "	mtctr	%%r11\n"		\
+  37:stubs.c       **** "	bctr\n"				\
+  38:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "r11");
+  39:stubs.c       **** #elif defined(CONFIG_ARM)
+  40:stubs.c       **** #ifdef CONFIG_ARM64
+  41:stubs.c       **** /*
+  42:stubs.c       ****  * x18 holds the pointer to the global_data, x9 is a call-clobbered
+  43:stubs.c       ****  * register
+  44:stubs.c       ****  */
+  45:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+  46:stubs.c       **** 	asm volatile (			\
+  47:stubs.c       **** "	.globl " #x "\n"		\
+  48:stubs.c       **** #x ":\n"				\
+  49:stubs.c       **** "	ldr	x9, [x18, %0]\n"		\
+  50:stubs.c       **** "	ldr	x9, [x9, %1]\n"		\
+  51:stubs.c       **** "	br	x9\n"		\
+  52:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "x9");
+  53:stubs.c       **** #else
+  54:stubs.c       **** /*
+  55:stubs.c       ****  * r9 holds the pointer to the global_data, ip is a call-clobbered
+  56:stubs.c       ****  * register
+  57:stubs.c       ****  */
+  58:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+  59:stubs.c       **** 	asm volatile (			\
+  60:stubs.c       **** "	.globl " #x "\n"		\
+  61:stubs.c       **** #x ":\n"				\
+  62:stubs.c       **** "	ldr	ip, [r9, %0]\n"		\
+  63:stubs.c       **** "	ldr	pc, [ip, %1]\n"		\
+  64:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "ip");
+  65:stubs.c       **** #endif
+  66:stubs.c       **** #elif defined(CONFIG_MIPS)
+  67:stubs.c       **** /*
+  68:stubs.c       ****  * k0 ($26) holds the pointer to the global_data; t9 ($25) is a call-
+  69:stubs.c       ****  * clobbered register that is also used to set gp ($26). Note that the
+  70:stubs.c       ****  * jr instruction also executes the instruction immediately following
+  71:stubs.c       ****  * it; however, GCC/mips generates an additional `nop' after each asm
+  72:stubs.c       ****  * statement
+  73:stubs.c       ****  */
+  74:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+  75:stubs.c       **** 	asm volatile (			\
+  76:stubs.c       **** "	.globl " #x "\n"		\
+  77:stubs.c       **** #x ":\n"				\
+  78:stubs.c       **** "	lw	$25, %0($26)\n"		\
+  79:stubs.c       **** "	lw	$25, %1($25)\n"		\
+  80:stubs.c       **** "	jr	$25\n"			\
+  81:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "t9");
+  82:stubs.c       **** #elif defined(CONFIG_NIOS2)
+  83:stubs.c       **** /*
+  84:stubs.c       ****  * gp holds the pointer to the global_data, r8 is call-clobbered
+  85:stubs.c       ****  */
+  86:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+  87:stubs.c       **** 	asm volatile (			\
+  88:stubs.c       **** "	.globl " #x "\n"		\
+  89:stubs.c       **** #x ":\n"				\
+  90:stubs.c       **** "	movhi	r8, %%hi(%0)\n"		\
+  91:stubs.c       **** "	ori	r8, r0, %%lo(%0)\n"	\
+  92:stubs.c       **** "	add	r8, r8, gp\n"		\
+  93:stubs.c       **** "	ldw	r8, 0(r8)\n"		\
+  94:stubs.c       **** "	ldw	r8, %1(r8)\n"		\
+  95:stubs.c       **** "	jmp	r8\n"			\
+  96:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "gp");
+  97:stubs.c       **** #elif defined(CONFIG_M68K)
+  98:stubs.c       **** /*
+  99:stubs.c       ****  * d7 holds the pointer to the global_data, a0 is a call-clobbered
+ 100:stubs.c       ****  * register
+ 101:stubs.c       ****  */
+ 102:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+ 103:stubs.c       **** 	asm volatile (			\
+ 104:stubs.c       **** "	.globl " #x "\n"		\
+ 105:stubs.c       **** #x ":\n"				\
+ 106:stubs.c       **** "	move.l	%%d7, %%a0\n"		\
+ 107:stubs.c       **** "	adda.l	%0, %%a0\n"		\
+ 108:stubs.c       **** "	move.l	(%%a0), %%a0\n"		\
+ 109:stubs.c       **** "	adda.l	%1, %%a0\n"		\
+ 110:stubs.c       **** "	move.l	(%%a0), %%a0\n"		\
+ 111:stubs.c       **** "	jmp	(%%a0)\n"			\
+ 112:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "a0");
+ 113:stubs.c       **** #elif defined(CONFIG_MICROBLAZE)
+ 114:stubs.c       **** /*
+ 115:stubs.c       ****  * r31 holds the pointer to the global_data. r5 is a call-clobbered.
+ 116:stubs.c       ****  */
+ 117:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...)				\
+ 118:stubs.c       **** 	asm volatile (				\
+ 119:stubs.c       **** "	.globl " #x "\n"			\
+ 120:stubs.c       **** #x ":\n"					\
+ 121:stubs.c       **** "	lwi	r5, r31, %0\n"			\
+ 122:stubs.c       **** "	lwi	r5, r5, %1\n"			\
+ 123:stubs.c       **** "	bra	r5\n"				\
+ 124:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "r5");
+ 125:stubs.c       **** #elif defined(CONFIG_BLACKFIN)
+ 126:stubs.c       **** /*
+ 127:stubs.c       ****  * P3 holds the pointer to the global_data, P0 is a call-clobbered
+ 128:stubs.c       ****  * register
+ 129:stubs.c       ****  */
+ 130:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...)			\
+ 131:stubs.c       **** 	asm volatile (			\
+ 132:stubs.c       **** "	.globl _" #x "\n_"		\
+ 133:stubs.c       **** #x ":\n"				\
+ 134:stubs.c       **** "	P0 = [P3 + %0]\n"		\
+ 135:stubs.c       **** "	P0 = [P0 + %1]\n"		\
+ 136:stubs.c       **** "	JUMP (P0)\n"			\
+ 137:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "P0");
+ 138:stubs.c       **** #elif defined(CONFIG_AVR32)
+ 139:stubs.c       **** /*
+ 140:stubs.c       ****  * r6 holds the pointer to the global_data. r8 is call clobbered.
+ 141:stubs.c       ****  */
+ 142:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...)					\
+ 143:stubs.c       **** 	asm volatile(					\
+ 144:stubs.c       **** 		"	.globl\t" #x "\n"		\
+ 145:stubs.c       **** 		#x ":\n"				\
+ 146:stubs.c       **** 		"	ld.w	r8, r6[%0]\n"		\
+ 147:stubs.c       **** 		"	ld.w	pc, r8[%1]\n"		\
+ 148:stubs.c       **** 		:					\
+ 149:stubs.c       **** 		: "i"(offsetof(gd_t, jt)), "i"(FO(x))	\
+ 150:stubs.c       **** 		: "r8");
+ 151:stubs.c       **** #elif defined(CONFIG_SH)
+ 152:stubs.c       **** /*
+ 153:stubs.c       ****  * r13 holds the pointer to the global_data. r1 is a call clobbered.
+ 154:stubs.c       ****  */
+ 155:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...)					\
+ 156:stubs.c       **** 	asm volatile (					\
+ 157:stubs.c       **** 		"	.align	2\n"			\
+ 158:stubs.c       **** 		"	.globl " #x "\n"		\
+ 159:stubs.c       **** 		#x ":\n"				\
+ 160:stubs.c       **** 		"	mov	r13, r1\n"		\
+ 161:stubs.c       **** 		"	add	%0, r1\n"		\
+ 162:stubs.c       **** 		"	mov.l @r1, r2\n"	\
+ 163:stubs.c       **** 		"	add	%1, r2\n"		\
+ 164:stubs.c       **** 		"	mov.l @r2, r1\n"	\
+ 165:stubs.c       **** 		"	jmp	@r1\n"			\
+ 166:stubs.c       **** 		"	nop\n"				\
+ 167:stubs.c       **** 		"	nop\n"				\
+ 168:stubs.c       **** 		: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "r1", "r2");
+ 169:stubs.c       **** #elif defined(CONFIG_SPARC)
+ 170:stubs.c       **** /*
+ 171:stubs.c       ****  * g7 holds the pointer to the global_data. g1 is call clobbered.
+ 172:stubs.c       ****  */
+ 173:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...)					\
+ 174:stubs.c       **** 	asm volatile(					\
+ 175:stubs.c       **** "	.globl\t" #x "\n"				\
+ 176:stubs.c       **** #x ":\n"						\
+ 177:stubs.c       **** "	set %0, %%g1\n"					\
+ 178:stubs.c       **** "	or %%g1, %%g7, %%g1\n"				\
+ 179:stubs.c       **** "	ld [%%g1], %%g1\n"				\
+ 180:stubs.c       **** "	ld [%%g1 + %1], %%g1\n"				\
+ 181:stubs.c       **** "	jmp %%g1\n"					\
+ 182:stubs.c       **** "	nop\n"						\
+ 183:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "g1");
+ 184:stubs.c       **** #elif defined(CONFIG_NDS32)
+ 185:stubs.c       **** /*
+ 186:stubs.c       ****  * r16 holds the pointer to the global_data. gp is call clobbered.
+ 187:stubs.c       ****  * not support reduced register (16 GPR).
+ 188:stubs.c       ****  */
+ 189:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+ 190:stubs.c       **** 	asm volatile (			\
+ 191:stubs.c       **** "	.globl " #x "\n"		\
+ 192:stubs.c       **** #x ":\n"				\
+ 193:stubs.c       **** "	lwi	$r16, [$gp + (%0)]\n"	\
+ 194:stubs.c       **** "	lwi	$r16, [$r16 + (%1)]\n"	\
+ 195:stubs.c       **** "	jr	$r16\n"			\
+ 196:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "$r16");
+ 197:stubs.c       **** #elif defined(CONFIG_OPENRISC)
+ 198:stubs.c       **** /*
+ 199:stubs.c       ****  * r10 holds the pointer to the global_data, r13 is a call-clobbered
+ 200:stubs.c       ****  * register
+ 201:stubs.c       ****  */
+ 202:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+ 203:stubs.c       **** 	asm volatile (			\
+ 204:stubs.c       **** "	.globl " #x "\n"		\
+ 205:stubs.c       **** #x ":\n"				\
+ 206:stubs.c       **** "	l.lwz	r13, %0(r10)\n"	\
+ 207:stubs.c       **** "	l.lwz	r13, %1(r13)\n"	\
+ 208:stubs.c       **** "	l.jr	r13\n"		\
+ 209:stubs.c       **** "	l.nop\n"				\
+ 210:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "r13");
+ 211:stubs.c       **** #elif defined(CONFIG_ARC)
+ 212:stubs.c       **** /*
+ 213:stubs.c       ****  * r25 holds the pointer to the global_data. r10 is call clobbered.
+ 214:stubs.c       ****   */
+ 215:stubs.c       **** #define EXPORT_FUNC(f, a, x, ...) \
+ 216:stubs.c       **** 	asm volatile( \
+ 217:stubs.c       **** "	.align 4\n" \
+ 218:stubs.c       **** "	.globl " #x "\n" \
+ 219:stubs.c       **** #x ":\n" \
+ 220:stubs.c       **** "	ld	r10, [r25, %0]\n" \
+ 221:stubs.c       **** "	ld	r10, [r10, %1]\n" \
+ 222:stubs.c       **** "	j	[r10]\n" \
+ 223:stubs.c       **** 	: : "i"(offsetof(gd_t, jt)), "i"(FO(x)) : "r10");
+ 224:stubs.c       **** #else
+ 225:stubs.c       **** /*"	addi	$sp, $sp, -24\n"	\
+ 226:stubs.c       **** "	br	$r16\n"			\*/
+ 227:stubs.c       **** 
+ 228:stubs.c       **** #error stubs definition missing for this architecture
+ 229:stubs.c       **** #endif
+ 230:stubs.c       **** 
+ 231:stubs.c       **** /* This function is necessary to prevent the compiler from
+ 232:stubs.c       ****  * generating prologue/epilogue, preparing stack frame etc.
+ 233:stubs.c       ****  * The stub functions are special, they do not use the stack
+ 234:stubs.c       ****  * frame passed to them, but pass it intact to the actual
+ 235:stubs.c       ****  * implementation. On the other hand, asm() statements with
+ 236:stubs.c       ****  * arguments can be used only inside the functions (gcc limitation)
+ 237:stubs.c       ****  */
+ 238:stubs.c       **** #if GCC_VERSION < 30400
+ 239:stubs.c       **** static
+ 240:stubs.c       **** #endif /* GCC_VERSION */
+ 241:stubs.c       **** void __attribute__((unused)) dummy(void)
+ 242:stubs.c       **** {
+  23              	 .loc 1 242 0
+  24              	 .cfi_startproc
+  25              	 
+  26              	 
+  27              	 
+  28 0000 04B02DE5 	 str fp,[sp,#-4]!
+  29              	.LCFI0:
+  30              	 .cfi_def_cfa_offset 4
+  31              	 .cfi_offset 11,-4
+  32 0004 00B08DE2 	 add fp,sp,#0
+  33              	.LCFI1:
+  34              	 .cfi_def_cfa_register 11
+  35              	 .file 2 "includes/include/_exports.h"
+   1:includes/include/_exports.h **** /*
+   2:includes/include/_exports.h ****  * You need to use #ifdef around functions that may not exist
+   3:includes/include/_exports.h ****  * in the final configuration (such as i2c).
+   4:includes/include/_exports.h ****  * use a dummyfunction as first parameter to EXPORT_FUNC.
+   5:includes/include/_exports.h ****  * As an example see the CONFIG_CMD_I2C section below
+   6:includes/include/_exports.h ****  */
+   7:includes/include/_exports.h **** #ifndef EXPORT_FUNC
+   8:includes/include/_exports.h **** #define EXPORT_FUNC(a, b, c, ...)
+   9:includes/include/_exports.h **** #endif
+  10:includes/include/_exports.h **** 	EXPORT_FUNC(get_version, unsigned long, get_version, void)
+  36              	 .loc 2 10 0
+  37              	
+  38              	
+  39              	 .globl get_version
+  40              	get_version:
+  41 0008 64C099E5 	 ldr ip,[r9,#100]
+  42 000c 00F09CE5 	 ldr pc,[ip,#0]
+  43              	
+  44              	
+  11:includes/include/_exports.h **** 	EXPORT_FUNC(getc, int, getc, void)
+  45              	 .loc 2 11 0
+  46              	
+  47              	 .globl getc
+  48              	getc:
+  49 0010 64C099E5 	 ldr ip,[r9,#100]
+  50 0014 04F09CE5 	 ldr pc,[ip,#4]
+  51              	
+  52              	
+  12:includes/include/_exports.h **** 	EXPORT_FUNC(tstc, int, tstc, void)
+  53              	 .loc 2 12 0
+  54              	
+  55              	 .globl tstc
+  56              	tstc:
+  57 0018 64C099E5 	 ldr ip,[r9,#100]
+  58 001c 08F09CE5 	 ldr pc,[ip,#8]
+  59              	
+  60              	
+  13:includes/include/_exports.h **** 	EXPORT_FUNC(putc, void, putc, const char)
+  61              	 .loc 2 13 0
+  62              	
+  63              	 .globl putc
+  64              	putc:
+  65 0020 64C099E5 	 ldr ip,[r9,#100]
+  66 0024 0CF09CE5 	 ldr pc,[ip,#12]
+  67              	
+  68              	
+  14:includes/include/_exports.h **** 	EXPORT_FUNC(puts, void, puts, const char *)
+  69              	 .loc 2 14 0
+  70              	
+  71              	 .globl puts
+  72              	puts:
+  73 0028 64C099E5 	 ldr ip,[r9,#100]
+  74 002c 10F09CE5 	 ldr pc,[ip,#16]
+  75              	
+  76              	
+  15:includes/include/_exports.h **** 	EXPORT_FUNC(printf, int, printf, const char*, ...)
+  77              	 .loc 2 15 0
+  78              	
+  79              	 .globl printf
+  80              	printf:
+  81 0030 64C099E5 	 ldr ip,[r9,#100]
+  82 0034 14F09CE5 	 ldr pc,[ip,#20]
+  83              	
+  84              	
+  16:includes/include/_exports.h **** #if defined(CONFIG_X86) || defined(CONFIG_PPC)
+  17:includes/include/_exports.h **** 	EXPORT_FUNC(irq_install_handler, void, install_hdlr,
+  18:includes/include/_exports.h **** 		    int, interrupt_handler_t, void*)
+  19:includes/include/_exports.h **** 
+  20:includes/include/_exports.h **** 	EXPORT_FUNC(irq_free_handler, void, free_hdlr, int)
+  21:includes/include/_exports.h **** #else
+  22:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, install_hdlr, void)
+  85              	 .loc 2 22 0
+  86              	
+  87              	 .globl install_hdlr
+  88              	install_hdlr:
+  89 0038 64C099E5 	 ldr ip,[r9,#100]
+  90 003c 18F09CE5 	 ldr pc,[ip,#24]
+  91              	
+  92              	
+  23:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, free_hdlr, void)
+  93              	 .loc 2 23 0
+  94              	
+  95              	 .globl free_hdlr
+  96              	free_hdlr:
+  97 0040 64C099E5 	 ldr ip,[r9,#100]
+  98 0044 1CF09CE5 	 ldr pc,[ip,#28]
+  99              	
+ 100              	
+  24:includes/include/_exports.h **** #endif
+  25:includes/include/_exports.h **** 	EXPORT_FUNC(malloc, void *, malloc, size_t)
+ 101              	 .loc 2 25 0
+ 102              	
+ 103              	 .globl malloc
+ 104              	malloc:
+ 105 0048 64C099E5 	 ldr ip,[r9,#100]
+ 106 004c 20F09CE5 	 ldr pc,[ip,#32]
+ 107              	
+ 108              	
+  26:includes/include/_exports.h **** #if !CONFIG_IS_ENABLED(SYS_MALLOC_SIMPLE)
+  27:includes/include/_exports.h **** 	EXPORT_FUNC(free, void, free, void *)
+ 109              	 .loc 2 27 0
+ 110              	
+ 111              	 .globl free
+ 112              	free:
+ 113 0050 64C099E5 	 ldr ip,[r9,#100]
+ 114 0054 24F09CE5 	 ldr pc,[ip,#36]
+ 115              	
+ 116              	
+  28:includes/include/_exports.h **** #endif
+  29:includes/include/_exports.h **** 	EXPORT_FUNC(udelay, void, udelay, unsigned long)
+ 117              	 .loc 2 29 0
+ 118              	
+ 119              	 .globl udelay
+ 120              	udelay:
+ 121 0058 64C099E5 	 ldr ip,[r9,#100]
+ 122 005c 28F09CE5 	 ldr pc,[ip,#40]
+ 123              	
+ 124              	
+  30:includes/include/_exports.h **** 	EXPORT_FUNC(get_timer, unsigned long, get_timer, unsigned long)
+ 125              	 .loc 2 30 0
+ 126              	
+ 127              	 .globl get_timer
+ 128              	get_timer:
+ 129 0060 64C099E5 	 ldr ip,[r9,#100]
+ 130 0064 2CF09CE5 	 ldr pc,[ip,#44]
+ 131              	
+ 132              	
+  31:includes/include/_exports.h **** 	EXPORT_FUNC(vprintf, int, vprintf, const char *, va_list)
+ 133              	 .loc 2 31 0
+ 134              	
+ 135              	 .globl vprintf
+ 136              	vprintf:
+ 137 0068 64C099E5 	 ldr ip,[r9,#100]
+ 138 006c 30F09CE5 	 ldr pc,[ip,#48]
+ 139              	
+ 140              	
+  32:includes/include/_exports.h **** 	EXPORT_FUNC(do_reset, int, do_reset, cmd_tbl_t *,
+ 141              	 .loc 2 32 0
+ 142              	
+ 143              	 .globl do_reset
+ 144              	do_reset:
+ 145 0070 64C099E5 	 ldr ip,[r9,#100]
+ 146 0074 34F09CE5 	 ldr pc,[ip,#52]
+ 147              	
+ 148              	
+  33:includes/include/_exports.h **** 		    int , int , char * const [])
+  34:includes/include/_exports.h **** 	EXPORT_FUNC(getenv, char  *, getenv, const char*)
+ 149              	 .loc 2 34 0
+ 150              	
+ 151              	 .globl getenv
+ 152              	getenv:
+ 153 0078 64C099E5 	 ldr ip,[r9,#100]
+ 154 007c 38F09CE5 	 ldr pc,[ip,#56]
+ 155              	
+ 156              	
+  35:includes/include/_exports.h **** 	EXPORT_FUNC(setenv, int, setenv, const char *, const char *)
+ 157              	 .loc 2 35 0
+ 158              	
+ 159              	 .globl setenv
+ 160              	setenv:
+ 161 0080 64C099E5 	 ldr ip,[r9,#100]
+ 162 0084 3CF09CE5 	 ldr pc,[ip,#60]
+ 163              	
+ 164              	
+  36:includes/include/_exports.h **** 	EXPORT_FUNC(simple_strtoul, unsigned long, simple_strtoul,
+ 165              	 .loc 2 36 0
+ 166              	
+ 167              	 .globl simple_strtoul
+ 168              	simple_strtoul:
+ 169 0088 64C099E5 	 ldr ip,[r9,#100]
+ 170 008c 40F09CE5 	 ldr pc,[ip,#64]
+ 171              	
+ 172              	
+  37:includes/include/_exports.h **** 		    const char *, char **, unsigned int)
+  38:includes/include/_exports.h **** 	EXPORT_FUNC(strict_strtoul, int, strict_strtoul,
+ 173              	 .loc 2 38 0
+ 174              	
+ 175              	 .globl strict_strtoul
+ 176              	strict_strtoul:
+ 177 0090 64C099E5 	 ldr ip,[r9,#100]
+ 178 0094 44F09CE5 	 ldr pc,[ip,#68]
+ 179              	
+ 180              	
+  39:includes/include/_exports.h **** 		    const char *, unsigned int , unsigned long *)
+  40:includes/include/_exports.h **** 	EXPORT_FUNC(simple_strtol, long, simple_strtol,
+ 181              	 .loc 2 40 0
+ 182              	
+ 183              	 .globl simple_strtol
+ 184              	simple_strtol:
+ 185 0098 64C099E5 	 ldr ip,[r9,#100]
+ 186 009c 48F09CE5 	 ldr pc,[ip,#72]
+ 187              	
+ 188              	
+  41:includes/include/_exports.h **** 		    const char *, char **, unsigned int)
+  42:includes/include/_exports.h **** 	EXPORT_FUNC(strcmp, int, strcmp, const char *cs, const char *ct)
+ 189              	 .loc 2 42 0
+ 190              	
+ 191              	 .globl strcmp
+ 192              	strcmp:
+ 193 00a0 64C099E5 	 ldr ip,[r9,#100]
+ 194 00a4 4CF09CE5 	 ldr pc,[ip,#76]
+ 195              	
+ 196              	
+  43:includes/include/_exports.h **** #if defined(CONFIG_CMD_I2C) && \
+  44:includes/include/_exports.h **** 		(!defined(CONFIG_DM_I2C) || defined(CONFIG_DM_I2C_COMPAT))
+  45:includes/include/_exports.h **** 	EXPORT_FUNC(i2c_write, int, i2c_write, uchar, uint, int , uchar * , int)
+ 197              	 .loc 2 45 0
+ 198              	
+ 199              	 .globl i2c_write
+ 200              	i2c_write:
+ 201 00a8 64C099E5 	 ldr ip,[r9,#100]
+ 202 00ac 50F09CE5 	 ldr pc,[ip,#80]
+ 203              	
+ 204              	
+  46:includes/include/_exports.h **** 	EXPORT_FUNC(i2c_read, int, i2c_read, uchar, uint, int , uchar * , int)
+ 205              	 .loc 2 46 0
+ 206              	
+ 207              	 .globl i2c_read
+ 208              	i2c_read:
+ 209 00b0 64C099E5 	 ldr ip,[r9,#100]
+ 210 00b4 54F09CE5 	 ldr pc,[ip,#84]
+ 211              	
+ 212              	
+  47:includes/include/_exports.h **** #else
+  48:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, i2c_write, void)
+  49:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, i2c_read, void)
+  50:includes/include/_exports.h **** #endif
+  51:includes/include/_exports.h **** 
+  52:includes/include/_exports.h **** #if !defined(CONFIG_CMD_SPI) || defined(CONFIG_DM_SPI)
+  53:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, spi_init, void)
+  54:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, spi_setup_slave, void)
+  55:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, spi_free_slave, void)
+  56:includes/include/_exports.h **** #else
+  57:includes/include/_exports.h **** 	EXPORT_FUNC(spi_init, void, spi_init, void)
+ 213              	 .loc 2 57 0
+ 214              	
+ 215              	 .globl spi_init
+ 216              	spi_init:
+ 217 00b8 64C099E5 	 ldr ip,[r9,#100]
+ 218 00bc 58F09CE5 	 ldr pc,[ip,#88]
+ 219              	
+ 220              	
+  58:includes/include/_exports.h **** 	EXPORT_FUNC(spi_setup_slave, struct spi_slave *, spi_setup_slave,
+ 221              	 .loc 2 58 0
+ 222              	
+ 223              	 .globl spi_setup_slave
+ 224              	spi_setup_slave:
+ 225 00c0 64C099E5 	 ldr ip,[r9,#100]
+ 226 00c4 5CF09CE5 	 ldr pc,[ip,#92]
+ 227              	
+ 228              	
+  59:includes/include/_exports.h **** 		    unsigned int, unsigned int, unsigned int, unsigned int)
+  60:includes/include/_exports.h **** 	EXPORT_FUNC(spi_free_slave, void, spi_free_slave, struct spi_slave *)
+ 229              	 .loc 2 60 0
+ 230              	
+ 231              	 .globl spi_free_slave
+ 232              	spi_free_slave:
+ 233 00c8 64C099E5 	 ldr ip,[r9,#100]
+ 234 00cc 60F09CE5 	 ldr pc,[ip,#96]
+ 235              	
+ 236              	
+  61:includes/include/_exports.h **** #endif
+  62:includes/include/_exports.h **** #ifndef CONFIG_CMD_SPI
+  63:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, spi_claim_bus, void)
+  64:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, spi_release_bus, void)
+  65:includes/include/_exports.h **** 	EXPORT_FUNC(dummy, void, spi_xfer, void)
+  66:includes/include/_exports.h **** #else
+  67:includes/include/_exports.h **** 	EXPORT_FUNC(spi_claim_bus, int, spi_claim_bus, struct spi_slave *)
+ 237              	 .loc 2 67 0
+ 238              	
+ 239              	 .globl spi_claim_bus
+ 240              	spi_claim_bus:
+ 241 00d0 64C099E5 	 ldr ip,[r9,#100]
+ 242 00d4 64F09CE5 	 ldr pc,[ip,#100]
+ 243              	
+ 244              	
+  68:includes/include/_exports.h **** 	EXPORT_FUNC(spi_release_bus, void, spi_release_bus, struct spi_slave *)
+ 245              	 .loc 2 68 0
+ 246              	
+ 247              	 .globl spi_release_bus
+ 248              	spi_release_bus:
+ 249 00d8 64C099E5 	 ldr ip,[r9,#100]
+ 250 00dc 68F09CE5 	 ldr pc,[ip,#104]
+ 251              	
+ 252              	
+  69:includes/include/_exports.h **** 	EXPORT_FUNC(spi_xfer, int, spi_xfer, struct spi_slave *,
+ 253              	 .loc 2 69 0
+ 254              	
+ 255              	 .globl spi_xfer
+ 256              	spi_xfer:
+ 257 00e0 64C099E5 	 ldr ip,[r9,#100]
+ 258 00e4 6CF09CE5 	 ldr pc,[ip,#108]
+ 259              	
+ 260              	
+  70:includes/include/_exports.h **** 		    unsigned int, const void *, void *, unsigned long)
+  71:includes/include/_exports.h **** #endif
+  72:includes/include/_exports.h **** 	EXPORT_FUNC(ustrtoul, unsigned long, ustrtoul,
+ 261              	 .loc 2 72 0
+ 262              	
+ 263              	 .globl ustrtoul
+ 264              	ustrtoul:
+ 265 00e8 64C099E5 	 ldr ip,[r9,#100]
+ 266 00ec 70F09CE5 	 ldr pc,[ip,#112]
+ 267              	
+ 268              	
+  73:includes/include/_exports.h **** 		    const char *, char **, unsigned int)
+  74:includes/include/_exports.h **** 	EXPORT_FUNC(ustrtoull, unsigned long long, ustrtoull,
+ 269              	 .loc 2 74 0
+ 270              	
+ 271              	 .globl ustrtoull
+ 272              	ustrtoull:
+ 273 00f0 64C099E5 	 ldr ip,[r9,#100]
+ 274 00f4 74F09CE5 	 ldr pc,[ip,#116]
+ 275              	
+ 276              	
+  75:includes/include/_exports.h **** 		    const char *, char **, unsigned int)
+  76:includes/include/_exports.h **** 	EXPORT_FUNC(strcpy, char *, strcpy, char *dest, const char *src)
+ 277              	 .loc 2 76 0
+ 278              	
+ 279              	 .globl strcpy
+ 280              	strcpy:
+ 281 00f8 64C099E5 	 ldr ip,[r9,#100]
+ 282 00fc 78F09CE5 	 ldr pc,[ip,#120]
+ 283              	
+ 284              	
+  77:includes/include/_exports.h **** 	EXPORT_FUNC(mdelay, void, mdelay, unsigned long msec)
+ 285              	 .loc 2 77 0
+ 286              	
+ 287              	 .globl mdelay
+ 288              	mdelay:
+ 289 0100 64C099E5 	 ldr ip,[r9,#100]
+ 290 0104 7CF09CE5 	 ldr pc,[ip,#124]
+ 291              	
+ 292              	
+ 243:stubs.c       **** #include <_exports.h>
+ 244:stubs.c       **** }
+ 293              	 .loc 1 244 0
+ 294 0108 00D08BE2 	 add sp,fp,#0
+ 295 010c 0008BDE8 	 ldmfd sp!,{fp}
+ 296 0110 1EFF2FE1 	 bx lr
+ 297              	 .cfi_endproc
+ 298              	.LFE149:
+ 300              	 .section .text.app_startup,"ax",%progbits
+ 301              	 .align 2
+ 302              	 .global app_startup
+ 304              	app_startup:
+ 305              	.LFB152:
+ 245:stubs.c       **** 
+ 246:stubs.c       **** #include <asm/sections.h>
+ 247:stubs.c       **** 
+ 248:stubs.c       **** void app_startup(char * const *argv)
+ 249:stubs.c       **** {
+ 306              	 .loc 1 249 0
+ 307              	 .cfi_startproc
+ 308              	 
+ 309              	 
+ 310              	 
+ 311 0000 04B02DE5 	 str fp,[sp,#-4]!
+ 312              	.LCFI2:
+ 313              	 .cfi_def_cfa_offset 4
+ 314              	 .cfi_offset 11,-4
+ 315 0004 00B08DE2 	 add fp,sp,#0
+ 316              	.LCFI3:
+ 317              	 .cfi_def_cfa_register 11
+ 318 0008 14D04DE2 	 sub sp,sp,#20
+ 319 000c 10000BE5 	 str r0,[fp,#-16]
+ 250:stubs.c       **** 	char *cp = __bss_start;
+ 320              	 .loc 1 250 0
+ 321 0010 38309FE5 	 ldr r3,.L5
+ 322 0014 08300BE5 	 str r3,[fp,#-8]
+ 251:stubs.c       **** 
+ 252:stubs.c       **** 	/* Zero out BSS */
+ 253:stubs.c       **** 	while (cp < _end)
+ 323              	 .loc 1 253 0
+ 324 0018 050000EA 	 b .L3
+ 325              	.L4:
+ 254:stubs.c       **** 		*cp++ = 0;
+ 326              	 .loc 1 254 0
+ 327 001c 08301BE5 	 ldr r3,[fp,#-8]
+ 328 0020 0020A0E3 	 mov r2,#0
+ 329 0024 0020C3E5 	 strb r2,[r3,#0]
+ 330 0028 08301BE5 	 ldr r3,[fp,#-8]
+ 331 002c 013083E2 	 add r3,r3,#1
+ 332 0030 08300BE5 	 str r3,[fp,#-8]
+ 333              	.L3:
+ 253:stubs.c       **** 	while (cp < _end)
+ 334              	 .loc 1 253 0 discriminator 1
+ 335 0034 08201BE5 	 ldr r2,[fp,#-8]
+ 336 0038 14309FE5 	 ldr r3,.L5+4
+ 337 003c 030052E1 	 cmp r2,r3
+ 338 0040 F5FFFF3A 	 bcc .L4
+ 255:stubs.c       **** 
+ 256:stubs.c       **** #if defined(CONFIG_X86)
+ 257:stubs.c       **** 	/* x86 does not have a dedicated register for passing global_data */
+ 258:stubs.c       **** 	global_data = (gd_t *)argv[-1];
+ 259:stubs.c       **** 	jt = global_data->jt;
+ 260:stubs.c       **** #endif
+ 261:stubs.c       **** }
+ 339              	 .loc 1 261 0
+ 340 0044 00D08BE2 	 add sp,fp,#0
+ 341 0048 0008BDE8 	 ldmfd sp!,{fp}
+ 342 004c 1EFF2FE1 	 bx lr
+ 343              	.L6:
+ 344              	 .align 2
+ 345              	.L5:
+ 346 0050 00000000 	 .word __bss_start
+ 347 0054 00000000 	 .word _end
+ 348              	 .cfi_endproc
+ 349              	.LFE152:
+ 351              	 .text
+ 352              	.Letext0:
+ 353              	 .file 3 "includes/arch/arm/include/asm/types.h"
+ 354              	 .file 4 "includes/include/linux/types.h"
+ 355              	 .file 5 "includes/include/asm-generic/u-boot.h"
+ 356              	 .file 6 "includes/include/net.h"
+ 357              	 .file 7 "includes/include/asm-generic/sections.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 stubs.c
+    {standard input}:17     .text.dummy:00000000 $a
+    {standard input}:20     .text.dummy:00000000 dummy
+    {standard input}:40     .text.dummy:00000008 get_version
+    {standard input}:48     .text.dummy:00000010 getc
+    {standard input}:56     .text.dummy:00000018 tstc
+    {standard input}:64     .text.dummy:00000020 putc
+    {standard input}:72     .text.dummy:00000028 puts
+    {standard input}:80     .text.dummy:00000030 printf
+    {standard input}:88     .text.dummy:00000038 install_hdlr
+    {standard input}:96     .text.dummy:00000040 free_hdlr
+    {standard input}:104    .text.dummy:00000048 malloc
+    {standard input}:112    .text.dummy:00000050 free
+    {standard input}:120    .text.dummy:00000058 udelay
+    {standard input}:128    .text.dummy:00000060 get_timer
+    {standard input}:136    .text.dummy:00000068 vprintf
+    {standard input}:144    .text.dummy:00000070 do_reset
+    {standard input}:152    .text.dummy:00000078 getenv
+    {standard input}:160    .text.dummy:00000080 setenv
+    {standard input}:168    .text.dummy:00000088 simple_strtoul
+    {standard input}:176    .text.dummy:00000090 strict_strtoul
+    {standard input}:184    .text.dummy:00000098 simple_strtol
+    {standard input}:192    .text.dummy:000000a0 strcmp
+    {standard input}:200    .text.dummy:000000a8 i2c_write
+    {standard input}:208    .text.dummy:000000b0 i2c_read
+    {standard input}:216    .text.dummy:000000b8 spi_init
+    {standard input}:224    .text.dummy:000000c0 spi_setup_slave
+    {standard input}:232    .text.dummy:000000c8 spi_free_slave
+    {standard input}:240    .text.dummy:000000d0 spi_claim_bus
+    {standard input}:248    .text.dummy:000000d8 spi_release_bus
+    {standard input}:256    .text.dummy:000000e0 spi_xfer
+    {standard input}:264    .text.dummy:000000e8 ustrtoul
+    {standard input}:272    .text.dummy:000000f0 ustrtoull
+    {standard input}:280    .text.dummy:000000f8 strcpy
+    {standard input}:288    .text.dummy:00000100 mdelay
+    {standard input}:301    .text.app_startup:00000000 $a
+    {standard input}:304    .text.app_startup:00000000 app_startup
+    {standard input}:346    .text.app_startup:00000050 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+__bss_start
+_end

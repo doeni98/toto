@@ -1,0 +1,635 @@
+   1              	 .arch armv5
+   2              	 .fpu softvfp
+   3              	 .eabi_attribute 20,1
+   4              	 .eabi_attribute 21,1
+   5              	 .eabi_attribute 23,3
+   6              	 .eabi_attribute 24,1
+   7              	 .eabi_attribute 25,1
+   8              	 .eabi_attribute 26,2
+   9              	 .eabi_attribute 30,6
+  10              	 .eabi_attribute 34,0
+  11              	 .eabi_attribute 18,4
+  12              	 .file "reptar_io_fpga_sp3.c"
+  13              	 .text
+  14              	.Ltext0:
+  15              	 .cfi_sections .debug_frame
+  16              	 .section .rodata
+  17              	 .align 2
+  18              	.LC0:
+  19 0000 55626F6F 	 .ascii "Uboot: Reptar io fpga sp3\012\012\000"
+  19      743A2052 
+  19      65707461 
+  19      7220696F 
+  19      20667067 
+  20              	 .align 2
+  21              	.LC1:
+  22 001c 436F6E73 	 .ascii "Constante: %#x\012\000"
+  22      74616E74 
+  22      653A2025 
+  22      23780A00 
+  23              	 .section .text.reptar_io_fpga_sp3,"ax",%progbits
+  24              	 .align 2
+  25              	 .global reptar_io_fpga_sp3
+  27              	reptar_io_fpga_sp3:
+  28              	.LFB149:
+  29              	 .file 1 "reptar_io_fpga_sp3.c"
+   1:reptar_io_fpga_sp3.c **** /**************************************************************************
+   2:reptar_io_fpga_sp3.c ****  * HEIG-VD, Institut REDS
+   3:reptar_io_fpga_sp3.c ****  *
+   4:reptar_io_fpga_sp3.c ****  * File       : reptar_io_fpga_sp3.c
+   5:reptar_io_fpga_sp3.c ****  * Author     : Alexandre Malki
+   6:reptar_io_fpga_sp3.c ****  * Created on : 28.02.2017
+   7:reptar_io_fpga_sp3.c ****  *
+   8:reptar_io_fpga_sp3.c ****  * Description  : Ce programme permet d'effectuer des actions
+   9:reptar_io_fpga_sp3.c ****  *		  entre le FPGA SP3 et le CPU.
+  10:reptar_io_fpga_sp3.c ****  *
+  11:reptar_io_fpga_sp3.c ****  *
+  12:reptar_io_fpga_sp3.c ****  **************************************************************************
+  13:reptar_io_fpga_sp3.c ****  */
+  14:reptar_io_fpga_sp3.c **** 
+  15:reptar_io_fpga_sp3.c **** #include <common.h>
+  16:reptar_io_fpga_sp3.c **** 
+  17:reptar_io_fpga_sp3.c **** typedef volatile unsigned short vushort;
+  18:reptar_io_fpga_sp3.c **** typedef volatile unsigned int   vuint;
+  19:reptar_io_fpga_sp3.c **** 
+  20:reptar_io_fpga_sp3.c **** //Les acces a la FPGA sont sur 16 bits. Il faut utiliser un type short
+  21:reptar_io_fpga_sp3.c **** //Le type volatile indique que cette donnee ne peut pas etre mise dans le cash
+  22:reptar_io_fpga_sp3.c **** #define FPGA_SP3_BASE_ADDR      0x1A000000
+  23:reptar_io_fpga_sp3.c **** #define FPGA_SP3_CST            *(vushort *)(FPGA_SP3_BASE_ADDR + 0x4)
+  24:reptar_io_fpga_sp3.c **** #define FPGA_SP3_SW             *(vushort *)(FPGA_SP3_BASE_ADDR + 0xa)
+  25:reptar_io_fpga_sp3.c **** #define FPGA_SP3_LEDS_RED       *(vushort *)(FPGA_SP3_BASE_ADDR + 0x6)
+  26:reptar_io_fpga_sp3.c **** #define FPGA_SP3_LEDS_GREEN     *(vushort *)(FPGA_SP3_BASE_ADDR + 0x8)
+  27:reptar_io_fpga_sp3.c **** 
+  28:reptar_io_fpga_sp3.c **** #define MASK_SW_PB0             0x400
+  29:reptar_io_fpga_sp3.c **** #define MASK_SW_PB1             0x800
+  30:reptar_io_fpga_sp3.c **** 
+  31:reptar_io_fpga_sp3.c **** //adresse pour les acces de SW4 du CPU
+  32:reptar_io_fpga_sp3.c **** #define GPIO_DATAIN_REGISTER_BANK4  *(vuint *) (0x49054038)
+  33:reptar_io_fpga_sp3.c **** #define MASK_SW_4                   0x40000000
+  34:reptar_io_fpga_sp3.c **** 
+  35:reptar_io_fpga_sp3.c **** 
+  36:reptar_io_fpga_sp3.c **** /* Declarer les fonctions ici */
+  37:reptar_io_fpga_sp3.c **** vushort read_cst(void);
+  38:reptar_io_fpga_sp3.c **** vushort read_sw_10_5(void);
+  39:reptar_io_fpga_sp3.c **** void add_leds_red(vushort cpt);
+  40:reptar_io_fpga_sp3.c **** void write_leds_green(vushort data);
+  41:reptar_io_fpga_sp3.c **** void write_leds_red(vushort data);
+  42:reptar_io_fpga_sp3.c **** 
+  43:reptar_io_fpga_sp3.c **** 
+  44:reptar_io_fpga_sp3.c **** int reptar_io_fpga_sp3(void)
+  45:reptar_io_fpga_sp3.c **** {
+  30              	 .loc 1 45 0
+  31              	 .cfi_startproc
+  32              	 
+  33              	 
+  34 0000 00482DE9 	 stmfd sp!,{fp,lr}
+  35              	.LCFI0:
+  36              	 .cfi_def_cfa_offset 8
+  37              	 .cfi_offset 11,-8
+  38              	 .cfi_offset 14,-4
+  39 0004 04B08DE2 	 add fp,sp,#4
+  40              	.LCFI1:
+  41              	 .cfi_def_cfa 11,4
+  42 0008 08D04DE2 	 sub sp,sp,#8
+  46:reptar_io_fpga_sp3.c **** 	app_startup(NULL);
+  43              	 .loc 1 46 0
+  44 000c 0000A0E3 	 mov r0,#0
+  45 0010 FEFFFFEB 	 bl app_startup
+  47:reptar_io_fpga_sp3.c **** 
+  48:reptar_io_fpga_sp3.c **** 	printf("Uboot: Reptar io fpga sp3\n\n");
+  46              	 .loc 1 48 0
+  47 0014 34019FE5 	 ldr r0,.L8
+  48 0018 FEFFFFEB 	 bl printf
+  49:reptar_io_fpga_sp3.c **** 	printf("Constante: %#x\n", read_cst());
+  49              	 .loc 1 49 0
+  50 001c FEFFFFEB 	 bl read_cst
+  51 0020 0030A0E1 	 mov r3,r0
+  52 0024 28019FE5 	 ldr r0,.L8+4
+  53 0028 0310A0E1 	 mov r1,r3
+  54 002c FEFFFFEB 	 bl printf
+  50:reptar_io_fpga_sp3.c **** 
+  51:reptar_io_fpga_sp3.c **** 	write_leds_green(0);
+  55              	 .loc 1 51 0
+  56 0030 0000A0E3 	 mov r0,#0
+  57 0034 FEFFFFEB 	 bl write_leds_green
+  52:reptar_io_fpga_sp3.c **** 	write_leds_red(0);
+  58              	 .loc 1 52 0
+  59 0038 0000A0E3 	 mov r0,#0
+  60 003c FEFFFFEB 	 bl write_leds_red
+  53:reptar_io_fpga_sp3.c **** 
+  54:reptar_io_fpga_sp3.c **** 	vushort cpt = 0;
+  61              	 .loc 1 54 0
+  62 0040 0030A0E3 	 mov r3,#0
+  63 0044 B6304BE1 	 strh r3,[fp,#-6]
+  55:reptar_io_fpga_sp3.c **** 	vushort SW_PB1_IS_PRESS = 0;
+  64              	 .loc 1 55 0
+  65 0048 0030A0E3 	 mov r3,#0
+  66 004c B8304BE1 	 strh r3,[fp,#-8]
+  56:reptar_io_fpga_sp3.c **** 
+  57:reptar_io_fpga_sp3.c **** 	/*Quitte l'application quand le SW4 du CPU est pressé*/
+  58:reptar_io_fpga_sp3.c **** 	while (!(GPIO_DATAIN_REGISTER_BANK4 & MASK_SW_4)) {
+  67              	 .loc 1 58 0
+  68 0050 350000EA 	 b .L2
+  69              	.L6:
+  59:reptar_io_fpga_sp3.c **** 
+  60:reptar_io_fpga_sp3.c **** 		//SW_PB0 pressé
+  61:reptar_io_fpga_sp3.c **** 		if(FPGA_SP3_SW & MASK_SW_PB0) {
+  70              	 .loc 1 61 0
+  71 0054 FC309FE5 	 ldr r3,.L8+8
+  72 0058 B030D3E1 	 ldrh r3,[r3,#0]
+  73 005c 0338A0E1 	 mov r3,r3,asl#16
+  74 0060 2338A0E1 	 mov r3,r3,lsr#16
+  75 0064 013B03E2 	 and r3,r3,#1024
+  76 0068 000053E3 	 cmp r3,#0
+  77 006c 0700000A 	 beq .L3
+  78              	.LBB2:
+  62:reptar_io_fpga_sp3.c **** 
+  63:reptar_io_fpga_sp3.c **** 			vushort sw = read_sw_10_5();
+  79              	 .loc 1 63 0
+  80 0070 FEFFFFEB 	 bl read_sw_10_5
+  81 0074 0030A0E1 	 mov r3,r0
+  82 0078 BA304BE1 	 strh r3,[fp,#-10]
+  64:reptar_io_fpga_sp3.c **** 			write_leds_green(sw);
+  83              	 .loc 1 64 0
+  84 007c BA305BE1 	 ldrh r3,[fp,#-10]
+  85 0080 0338A0E1 	 mov r3,r3,asl#16
+  86 0084 2338A0E1 	 mov r3,r3,lsr#16
+  87 0088 0300A0E1 	 mov r0,r3
+  88 008c FEFFFFEB 	 bl write_leds_green
+  89              	.L3:
+  90              	.LBE2:
+  65:reptar_io_fpga_sp3.c **** 		}
+  66:reptar_io_fpga_sp3.c **** 
+  67:reptar_io_fpga_sp3.c **** 		//SW_PB1 pressé
+  68:reptar_io_fpga_sp3.c **** 		if(FPGA_SP3_SW & MASK_SW_PB1) {
+  91              	 .loc 1 68 0
+  92 0090 C0309FE5 	 ldr r3,.L8+8
+  93 0094 B030D3E1 	 ldrh r3,[r3,#0]
+  94 0098 0338A0E1 	 mov r3,r3,asl#16
+  95 009c 2338A0E1 	 mov r3,r3,lsr#16
+  96 00a0 023B03E2 	 and r3,r3,#2048
+  97 00a4 000053E3 	 cmp r3,#0
+  98 00a8 1D00000A 	 beq .L4
+  69:reptar_io_fpga_sp3.c **** 
+  70:reptar_io_fpga_sp3.c **** 			if(!SW_PB1_IS_PRESS){
+  99              	 .loc 1 70 0
+ 100 00ac B8305BE1 	 ldrh r3,[fp,#-8]
+ 101 00b0 0338A0E1 	 mov r3,r3,asl#16
+ 102 00b4 2338A0E1 	 mov r3,r3,lsr#16
+ 103 00b8 000053E3 	 cmp r3,#0
+ 104 00bc 1A00001A 	 bne .L2
+  71:reptar_io_fpga_sp3.c **** 
+  72:reptar_io_fpga_sp3.c **** 				SW_PB1_IS_PRESS = 1;
+ 105              	 .loc 1 72 0
+ 106 00c0 0130A0E3 	 mov r3,#1
+ 107 00c4 B8304BE1 	 strh r3,[fp,#-8]
+  73:reptar_io_fpga_sp3.c **** 
+  74:reptar_io_fpga_sp3.c **** 				if(cpt < 6) {
+ 108              	 .loc 1 74 0
+ 109 00c8 B6305BE1 	 ldrh r3,[fp,#-6]
+ 110 00cc 0338A0E1 	 mov r3,r3,asl#16
+ 111 00d0 2338A0E1 	 mov r3,r3,lsr#16
+ 112 00d4 050053E3 	 cmp r3,#5
+ 113 00d8 0C00008A 	 bhi .L5
+  75:reptar_io_fpga_sp3.c **** 
+  76:reptar_io_fpga_sp3.c **** 					cpt++;
+ 114              	 .loc 1 76 0
+ 115 00dc B6305BE1 	 ldrh r3,[fp,#-6]
+ 116 00e0 0338A0E1 	 mov r3,r3,asl#16
+ 117 00e4 2338A0E1 	 mov r3,r3,lsr#16
+ 118 00e8 013083E2 	 add r3,r3,#1
+ 119 00ec 0338A0E1 	 mov r3,r3,asl#16
+ 120 00f0 2338A0E1 	 mov r3,r3,lsr#16
+ 121 00f4 B6304BE1 	 strh r3,[fp,#-6]
+  77:reptar_io_fpga_sp3.c **** 					add_leds_red(cpt);
+ 122              	 .loc 1 77 0
+ 123 00f8 B6305BE1 	 ldrh r3,[fp,#-6]
+ 124 00fc 0338A0E1 	 mov r3,r3,asl#16
+ 125 0100 2338A0E1 	 mov r3,r3,lsr#16
+ 126 0104 0300A0E1 	 mov r0,r3
+ 127 0108 FEFFFFEB 	 bl add_leds_red
+ 128 010c 060000EA 	 b .L2
+ 129              	.L5:
+  78:reptar_io_fpga_sp3.c **** 
+  79:reptar_io_fpga_sp3.c **** 				} else {
+  80:reptar_io_fpga_sp3.c **** 
+  81:reptar_io_fpga_sp3.c **** 					cpt = 0;
+ 130              	 .loc 1 81 0
+ 131 0110 0030A0E3 	 mov r3,#0
+ 132 0114 B6304BE1 	 strh r3,[fp,#-6]
+  82:reptar_io_fpga_sp3.c **** 					write_leds_red(0);
+ 133              	 .loc 1 82 0
+ 134 0118 0000A0E3 	 mov r0,#0
+ 135 011c FEFFFFEB 	 bl write_leds_red
+ 136 0120 010000EA 	 b .L2
+ 137              	.L4:
+  83:reptar_io_fpga_sp3.c **** 				}
+  84:reptar_io_fpga_sp3.c **** 
+  85:reptar_io_fpga_sp3.c **** 			}
+  86:reptar_io_fpga_sp3.c **** 		} else {
+  87:reptar_io_fpga_sp3.c **** 
+  88:reptar_io_fpga_sp3.c **** 			SW_PB1_IS_PRESS = 0;
+ 138              	 .loc 1 88 0
+ 139 0124 0030A0E3 	 mov r3,#0
+ 140 0128 B8304BE1 	 strh r3,[fp,#-8]
+ 141              	.L2:
+  58:reptar_io_fpga_sp3.c **** 	while (!(GPIO_DATAIN_REGISTER_BANK4 & MASK_SW_4)) {
+ 142              	 .loc 1 58 0 discriminator 1
+ 143 012c 28309FE5 	 ldr r3,.L8+12
+ 144 0130 003093E5 	 ldr r3,[r3,#0]
+ 145 0134 013103E2 	 and r3,r3,#1073741824
+ 146 0138 000053E3 	 cmp r3,#0
+ 147 013c C4FFFF0A 	 beq .L6
+  89:reptar_io_fpga_sp3.c **** 		}
+  90:reptar_io_fpga_sp3.c **** 	}
+  91:reptar_io_fpga_sp3.c **** 
+  92:reptar_io_fpga_sp3.c **** 	return (0);
+ 148              	 .loc 1 92 0
+ 149 0140 0030A0E3 	 mov r3,#0
+  93:reptar_io_fpga_sp3.c **** }
+ 150              	 .loc 1 93 0
+ 151 0144 0300A0E1 	 mov r0,r3
+ 152 0148 04D04BE2 	 sub sp,fp,#4
+ 153 014c 0088BDE8 	 ldmfd sp!,{fp,pc}
+ 154              	.L9:
+ 155              	 .align 2
+ 156              	.L8:
+ 157 0150 00000000 	 .word .LC0
+ 158 0154 1C000000 	 .word .LC1
+ 159 0158 0A00001A 	 .word 436207626
+ 160 015c 38400549 	 .word 1225080888
+ 161              	 .cfi_endproc
+ 162              	.LFE149:
+ 164              	 .section .text.read_cst,"ax",%progbits
+ 165              	 .align 2
+ 166              	 .global read_cst
+ 168              	read_cst:
+ 169              	.LFB150:
+  94:reptar_io_fpga_sp3.c **** 
+  95:reptar_io_fpga_sp3.c **** 
+  96:reptar_io_fpga_sp3.c **** /*Definisser les fonctions ici */
+  97:reptar_io_fpga_sp3.c **** vushort read_cst(void){
+ 170              	 .loc 1 97 0
+ 171              	 .cfi_startproc
+ 172              	 
+ 173              	 
+ 174              	 
+ 175 0000 04B02DE5 	 str fp,[sp,#-4]!
+ 176              	.LCFI2:
+ 177              	 .cfi_def_cfa_offset 4
+ 178              	 .cfi_offset 11,-4
+ 179 0004 00B08DE2 	 add fp,sp,#0
+ 180              	.LCFI3:
+ 181              	 .cfi_def_cfa_register 11
+  98:reptar_io_fpga_sp3.c **** 
+  99:reptar_io_fpga_sp3.c **** 	return (vushort) FPGA_SP3_CST;
+ 182              	 .loc 1 99 0
+ 183 0008 18309FE5 	 ldr r3,.L12
+ 184 000c B030D3E1 	 ldrh r3,[r3,#0]
+ 185 0010 0338A0E1 	 mov r3,r3,asl#16
+ 186 0014 2338A0E1 	 mov r3,r3,lsr#16
+ 100:reptar_io_fpga_sp3.c **** }
+ 187              	 .loc 1 100 0
+ 188 0018 0300A0E1 	 mov r0,r3
+ 189 001c 00D08BE2 	 add sp,fp,#0
+ 190 0020 0008BDE8 	 ldmfd sp!,{fp}
+ 191 0024 1EFF2FE1 	 bx lr
+ 192              	.L13:
+ 193              	 .align 2
+ 194              	.L12:
+ 195 0028 0400001A 	 .word 436207620
+ 196              	 .cfi_endproc
+ 197              	.LFE150:
+ 199              	 .section .text.read_sw_10_5,"ax",%progbits
+ 200              	 .align 2
+ 201              	 .global read_sw_10_5
+ 203              	read_sw_10_5:
+ 204              	.LFB151:
+ 101:reptar_io_fpga_sp3.c **** 
+ 102:reptar_io_fpga_sp3.c **** vushort read_sw_10_5(void) {
+ 205              	 .loc 1 102 0
+ 206              	 .cfi_startproc
+ 207              	 
+ 208              	 
+ 209              	 
+ 210 0000 04B02DE5 	 str fp,[sp,#-4]!
+ 211              	.LCFI4:
+ 212              	 .cfi_def_cfa_offset 4
+ 213              	 .cfi_offset 11,-4
+ 214 0004 00B08DE2 	 add fp,sp,#0
+ 215              	.LCFI5:
+ 216              	 .cfi_def_cfa_register 11
+ 217 0008 0CD04DE2 	 sub sp,sp,#12
+ 103:reptar_io_fpga_sp3.c **** 
+ 104:reptar_io_fpga_sp3.c **** 	//récupère la val des switchs
+ 105:reptar_io_fpga_sp3.c **** 	vushort sw = (vushort) FPGA_SP3_SW;
+ 218              	 .loc 1 105 0
+ 219 000c 44309FE5 	 ldr r3,.L16
+ 220 0010 B030D3E1 	 ldrh r3,[r3,#0]
+ 221 0014 0338A0E1 	 mov r3,r3,asl#16
+ 222 0018 2338A0E1 	 mov r3,r3,lsr#16
+ 223 001c B6304BE1 	 strh r3,[fp,#-6]
+ 106:reptar_io_fpga_sp3.c **** 
+ 107:reptar_io_fpga_sp3.c **** 	//shift pour avoir le switch 5 tout à droite
+ 108:reptar_io_fpga_sp3.c **** 	sw = sw >> 4;
+ 224              	 .loc 1 108 0
+ 225 0020 B6305BE1 	 ldrh r3,[fp,#-6]
+ 226 0024 0338A0E1 	 mov r3,r3,asl#16
+ 227 0028 2338A0E1 	 mov r3,r3,lsr#16
+ 228 002c 2332A0E1 	 mov r3,r3,lsr#4
+ 229 0030 0338A0E1 	 mov r3,r3,asl#16
+ 230 0034 2338A0E1 	 mov r3,r3,lsr#16
+ 231 0038 B6304BE1 	 strh r3,[fp,#-6]
+ 109:reptar_io_fpga_sp3.c **** 
+ 110:reptar_io_fpga_sp3.c **** 	return sw;
+ 232              	 .loc 1 110 0
+ 233 003c B6305BE1 	 ldrh r3,[fp,#-6]
+ 234 0040 0338A0E1 	 mov r3,r3,asl#16
+ 235 0044 2338A0E1 	 mov r3,r3,lsr#16
+ 111:reptar_io_fpga_sp3.c **** }
+ 236              	 .loc 1 111 0
+ 237 0048 0300A0E1 	 mov r0,r3
+ 238 004c 00D08BE2 	 add sp,fp,#0
+ 239 0050 0008BDE8 	 ldmfd sp!,{fp}
+ 240 0054 1EFF2FE1 	 bx lr
+ 241              	.L17:
+ 242              	 .align 2
+ 243              	.L16:
+ 244 0058 0A00001A 	 .word 436207626
+ 245              	 .cfi_endproc
+ 246              	.LFE151:
+ 248              	 .section .text.add_leds_red,"ax",%progbits
+ 249              	 .align 2
+ 250              	 .global add_leds_red
+ 252              	add_leds_red:
+ 253              	.LFB152:
+ 112:reptar_io_fpga_sp3.c **** 
+ 113:reptar_io_fpga_sp3.c **** void add_leds_red(vushort cpt) {
+ 254              	 .loc 1 113 0
+ 255              	 .cfi_startproc
+ 256              	 
+ 257              	 
+ 258 0000 00482DE9 	 stmfd sp!,{fp,lr}
+ 259              	.LCFI6:
+ 260              	 .cfi_def_cfa_offset 8
+ 261              	 .cfi_offset 11,-8
+ 262              	 .cfi_offset 14,-4
+ 263 0004 04B08DE2 	 add fp,sp,#4
+ 264              	.LCFI7:
+ 265              	 .cfi_def_cfa 11,4
+ 266 0008 10D04DE2 	 sub sp,sp,#16
+ 267 000c 0030A0E1 	 mov r3,r0
+ 268 0010 BE304BE1 	 strh r3,[fp,#-14]
+ 114:reptar_io_fpga_sp3.c **** 
+ 115:reptar_io_fpga_sp3.c **** 	vushort i;
+ 116:reptar_io_fpga_sp3.c **** 	vushort data = 0x1;
+ 269              	 .loc 1 116 0
+ 270 0014 0130A0E3 	 mov r3,#1
+ 271 0018 B8304BE1 	 strh r3,[fp,#-8]
+ 117:reptar_io_fpga_sp3.c **** 	vushort inc = 0x1;
+ 272              	 .loc 1 117 0
+ 273 001c 0130A0E3 	 mov r3,#1
+ 274 0020 BA304BE1 	 strh r3,[fp,#-10]
+ 118:reptar_io_fpga_sp3.c **** 
+ 119:reptar_io_fpga_sp3.c **** 	for(i = 0; i < cpt; i++){
+ 275              	 .loc 1 119 0
+ 276 0024 0030A0E3 	 mov r3,#0
+ 277 0028 B6304BE1 	 strh r3,[fp,#-6]
+ 278 002c 170000EA 	 b .L19
+ 279              	.L20:
+ 120:reptar_io_fpga_sp3.c **** 
+ 121:reptar_io_fpga_sp3.c **** 		data |= inc;
+ 280              	 .loc 1 121 0 discriminator 2
+ 281 0030 B8305BE1 	 ldrh r3,[fp,#-8]
+ 282 0034 0338A0E1 	 mov r3,r3,asl#16
+ 283 0038 2328A0E1 	 mov r2,r3,lsr#16
+ 284 003c BA305BE1 	 ldrh r3,[fp,#-10]
+ 285 0040 0338A0E1 	 mov r3,r3,asl#16
+ 286 0044 2338A0E1 	 mov r3,r3,lsr#16
+ 287 0048 033082E1 	 orr r3,r2,r3
+ 288 004c 0338A0E1 	 mov r3,r3,asl#16
+ 289 0050 2338A0E1 	 mov r3,r3,lsr#16
+ 290 0054 B8304BE1 	 strh r3,[fp,#-8]
+ 122:reptar_io_fpga_sp3.c **** 		inc <<= 1;
+ 291              	 .loc 1 122 0 discriminator 2
+ 292 0058 BA305BE1 	 ldrh r3,[fp,#-10]
+ 293 005c 0338A0E1 	 mov r3,r3,asl#16
+ 294 0060 2338A0E1 	 mov r3,r3,lsr#16
+ 295 0064 8330A0E1 	 mov r3,r3,asl#1
+ 296 0068 0338A0E1 	 mov r3,r3,asl#16
+ 297 006c 2338A0E1 	 mov r3,r3,lsr#16
+ 298 0070 BA304BE1 	 strh r3,[fp,#-10]
+ 119:reptar_io_fpga_sp3.c **** 	for(i = 0; i < cpt; i++){
+ 299              	 .loc 1 119 0 discriminator 2
+ 300 0074 B6305BE1 	 ldrh r3,[fp,#-6]
+ 301 0078 0338A0E1 	 mov r3,r3,asl#16
+ 302 007c 2338A0E1 	 mov r3,r3,lsr#16
+ 303 0080 013083E2 	 add r3,r3,#1
+ 304 0084 0338A0E1 	 mov r3,r3,asl#16
+ 305 0088 2338A0E1 	 mov r3,r3,lsr#16
+ 306 008c B6304BE1 	 strh r3,[fp,#-6]
+ 307              	.L19:
+ 119:reptar_io_fpga_sp3.c **** 	for(i = 0; i < cpt; i++){
+ 308              	 .loc 1 119 0 is_stmt 0 discriminator 1
+ 309 0090 B6305BE1 	 ldrh r3,[fp,#-6]
+ 310 0094 0338A0E1 	 mov r3,r3,asl#16
+ 311 0098 2328A0E1 	 mov r2,r3,lsr#16
+ 312 009c BE305BE1 	 ldrh r3,[fp,#-14]
+ 313 00a0 0338A0E1 	 mov r3,r3,asl#16
+ 314 00a4 2338A0E1 	 mov r3,r3,lsr#16
+ 315 00a8 030052E1 	 cmp r2,r3
+ 316 00ac DFFFFF3A 	 bcc .L20
+ 123:reptar_io_fpga_sp3.c **** 	}
+ 124:reptar_io_fpga_sp3.c **** 
+ 125:reptar_io_fpga_sp3.c **** 	write_leds_red(data);
+ 317              	 .loc 1 125 0 is_stmt 1
+ 318 00b0 B8305BE1 	 ldrh r3,[fp,#-8]
+ 319 00b4 0338A0E1 	 mov r3,r3,asl#16
+ 320 00b8 2338A0E1 	 mov r3,r3,lsr#16
+ 321 00bc 0300A0E1 	 mov r0,r3
+ 322 00c0 FEFFFFEB 	 bl write_leds_red
+ 126:reptar_io_fpga_sp3.c **** 
+ 127:reptar_io_fpga_sp3.c **** }
+ 323              	 .loc 1 127 0
+ 324 00c4 04D04BE2 	 sub sp,fp,#4
+ 325 00c8 0088BDE8 	 ldmfd sp!,{fp,pc}
+ 326              	 .cfi_endproc
+ 327              	.LFE152:
+ 329              	 .section .text.write_leds_red,"ax",%progbits
+ 330              	 .align 2
+ 331              	 .global write_leds_red
+ 333              	write_leds_red:
+ 334              	.LFB153:
+ 128:reptar_io_fpga_sp3.c **** 
+ 129:reptar_io_fpga_sp3.c **** 
+ 130:reptar_io_fpga_sp3.c **** void write_leds_red(vushort data) {
+ 335              	 .loc 1 130 0
+ 336              	 .cfi_startproc
+ 337              	 
+ 338              	 
+ 339              	 
+ 340 0000 04B02DE5 	 str fp,[sp,#-4]!
+ 341              	.LCFI8:
+ 342              	 .cfi_def_cfa_offset 4
+ 343              	 .cfi_offset 11,-4
+ 344 0004 00B08DE2 	 add fp,sp,#0
+ 345              	.LCFI9:
+ 346              	 .cfi_def_cfa_register 11
+ 347 0008 0CD04DE2 	 sub sp,sp,#12
+ 348 000c 0030A0E1 	 mov r3,r0
+ 349 0010 B6304BE1 	 strh r3,[fp,#-6]
+ 131:reptar_io_fpga_sp3.c **** 
+ 132:reptar_io_fpga_sp3.c **** 	//set les 10 bits de poids fort de la donnée à 0
+ 133:reptar_io_fpga_sp3.c **** 	data = data & 0x3f;
+ 350              	 .loc 1 133 0
+ 351 0014 B6305BE1 	 ldrh r3,[fp,#-6]
+ 352 0018 0338A0E1 	 mov r3,r3,asl#16
+ 353 001c 2338A0E1 	 mov r3,r3,lsr#16
+ 354 0020 3F3003E2 	 and r3,r3,#63
+ 355 0024 0338A0E1 	 mov r3,r3,asl#16
+ 356 0028 2338A0E1 	 mov r3,r3,lsr#16
+ 357 002c B6304BE1 	 strh r3,[fp,#-6]
+ 134:reptar_io_fpga_sp3.c **** 
+ 135:reptar_io_fpga_sp3.c **** 	//set les 6 bits de poids faible à 0
+ 136:reptar_io_fpga_sp3.c **** 	FPGA_SP3_LEDS_RED &= 0xffc0;
+ 358              	 .loc 1 136 0
+ 359 0030 58309FE5 	 ldr r3,.L22
+ 360 0034 54209FE5 	 ldr r2,.L22
+ 361 0038 B020D2E1 	 ldrh r2,[r2,#0]
+ 362 003c 0228A0E1 	 mov r2,r2,asl#16
+ 363 0040 2228A0E1 	 mov r2,r2,lsr#16
+ 364 0044 3F20C2E3 	 bic r2,r2,#63
+ 365 0048 0228A0E1 	 mov r2,r2,asl#16
+ 366 004c 2228A0E1 	 mov r2,r2,lsr#16
+ 367 0050 B020C3E1 	 strh r2,[r3,#0]
+ 137:reptar_io_fpga_sp3.c **** 
+ 138:reptar_io_fpga_sp3.c **** 	//set les 6 bits de poids faible avec la data
+ 139:reptar_io_fpga_sp3.c **** 	FPGA_SP3_LEDS_RED |= data;
+ 368              	 .loc 1 139 0
+ 369 0054 34309FE5 	 ldr r3,.L22
+ 370 0058 30209FE5 	 ldr r2,.L22
+ 371 005c B020D2E1 	 ldrh r2,[r2,#0]
+ 372 0060 0228A0E1 	 mov r2,r2,asl#16
+ 373 0064 2218A0E1 	 mov r1,r2,lsr#16
+ 374 0068 B6205BE1 	 ldrh r2,[fp,#-6]
+ 375 006c 0228A0E1 	 mov r2,r2,asl#16
+ 376 0070 2228A0E1 	 mov r2,r2,lsr#16
+ 377 0074 022081E1 	 orr r2,r1,r2
+ 378 0078 0228A0E1 	 mov r2,r2,asl#16
+ 379 007c 2228A0E1 	 mov r2,r2,lsr#16
+ 380 0080 B020C3E1 	 strh r2,[r3,#0]
+ 140:reptar_io_fpga_sp3.c **** }
+ 381              	 .loc 1 140 0
+ 382 0084 00D08BE2 	 add sp,fp,#0
+ 383 0088 0008BDE8 	 ldmfd sp!,{fp}
+ 384 008c 1EFF2FE1 	 bx lr
+ 385              	.L23:
+ 386              	 .align 2
+ 387              	.L22:
+ 388 0090 0600001A 	 .word 436207622
+ 389              	 .cfi_endproc
+ 390              	.LFE153:
+ 392              	 .section .text.write_leds_green,"ax",%progbits
+ 393              	 .align 2
+ 394              	 .global write_leds_green
+ 396              	write_leds_green:
+ 397              	.LFB154:
+ 141:reptar_io_fpga_sp3.c **** 
+ 142:reptar_io_fpga_sp3.c **** void write_leds_green(vushort data) {
+ 398              	 .loc 1 142 0
+ 399              	 .cfi_startproc
+ 400              	 
+ 401              	 
+ 402              	 
+ 403 0000 04B02DE5 	 str fp,[sp,#-4]!
+ 404              	.LCFI10:
+ 405              	 .cfi_def_cfa_offset 4
+ 406              	 .cfi_offset 11,-4
+ 407 0004 00B08DE2 	 add fp,sp,#0
+ 408              	.LCFI11:
+ 409              	 .cfi_def_cfa_register 11
+ 410 0008 0CD04DE2 	 sub sp,sp,#12
+ 411 000c 0030A0E1 	 mov r3,r0
+ 412 0010 B6304BE1 	 strh r3,[fp,#-6]
+ 143:reptar_io_fpga_sp3.c **** 
+ 144:reptar_io_fpga_sp3.c **** 	//set les 10 bits de poids fort de la donnée à 0
+ 145:reptar_io_fpga_sp3.c **** 	data = data & 0x3f;
+ 413              	 .loc 1 145 0
+ 414 0014 B6305BE1 	 ldrh r3,[fp,#-6]
+ 415 0018 0338A0E1 	 mov r3,r3,asl#16
+ 416 001c 2338A0E1 	 mov r3,r3,lsr#16
+ 417 0020 3F3003E2 	 and r3,r3,#63
+ 418 0024 0338A0E1 	 mov r3,r3,asl#16
+ 419 0028 2338A0E1 	 mov r3,r3,lsr#16
+ 420 002c B6304BE1 	 strh r3,[fp,#-6]
+ 146:reptar_io_fpga_sp3.c **** 
+ 147:reptar_io_fpga_sp3.c **** 	//set les 6 bits de poids faible à 0
+ 148:reptar_io_fpga_sp3.c **** 	FPGA_SP3_LEDS_GREEN &= 0xffc0;
+ 421              	 .loc 1 148 0
+ 422 0030 58309FE5 	 ldr r3,.L25
+ 423 0034 54209FE5 	 ldr r2,.L25
+ 424 0038 B020D2E1 	 ldrh r2,[r2,#0]
+ 425 003c 0228A0E1 	 mov r2,r2,asl#16
+ 426 0040 2228A0E1 	 mov r2,r2,lsr#16
+ 427 0044 3F20C2E3 	 bic r2,r2,#63
+ 428 0048 0228A0E1 	 mov r2,r2,asl#16
+ 429 004c 2228A0E1 	 mov r2,r2,lsr#16
+ 430 0050 B020C3E1 	 strh r2,[r3,#0]
+ 149:reptar_io_fpga_sp3.c **** 
+ 150:reptar_io_fpga_sp3.c **** 	//set les 6 bits de poids faible avec la data
+ 151:reptar_io_fpga_sp3.c **** 	FPGA_SP3_LEDS_GREEN |= data;
+ 431              	 .loc 1 151 0
+ 432 0054 34309FE5 	 ldr r3,.L25
+ 433 0058 30209FE5 	 ldr r2,.L25
+ 434 005c B020D2E1 	 ldrh r2,[r2,#0]
+ 435 0060 0228A0E1 	 mov r2,r2,asl#16
+ 436 0064 2218A0E1 	 mov r1,r2,lsr#16
+ 437 0068 B6205BE1 	 ldrh r2,[fp,#-6]
+ 438 006c 0228A0E1 	 mov r2,r2,asl#16
+ 439 0070 2228A0E1 	 mov r2,r2,lsr#16
+ 440 0074 022081E1 	 orr r2,r1,r2
+ 441 0078 0228A0E1 	 mov r2,r2,asl#16
+ 442 007c 2228A0E1 	 mov r2,r2,lsr#16
+ 443 0080 B020C3E1 	 strh r2,[r3,#0]
+ 152:reptar_io_fpga_sp3.c **** }
+ 444              	 .loc 1 152 0
+ 445 0084 00D08BE2 	 add sp,fp,#0
+ 446 0088 0008BDE8 	 ldmfd sp!,{fp}
+ 447 008c 1EFF2FE1 	 bx lr
+ 448              	.L26:
+ 449              	 .align 2
+ 450              	.L25:
+ 451 0090 0800001A 	 .word 436207624
+ 452              	 .cfi_endproc
+ 453              	.LFE154:
+ 455              	 .text
+ 456              	.Letext0:
+ 457              	 .file 2 "includes/arch/arm/include/asm/types.h"
+ 458              	 .file 3 "includes/include/linux/types.h"
+ 459              	 .file 4 "includes/include/asm-generic/u-boot.h"
+ 460              	 .file 5 "includes/include/net.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 reptar_io_fpga_sp3.c
+    {standard input}:17     .rodata:00000000 $d
+    {standard input}:24     .text.reptar_io_fpga_sp3:00000000 $a
+    {standard input}:27     .text.reptar_io_fpga_sp3:00000000 reptar_io_fpga_sp3
+    {standard input}:168    .text.read_cst:00000000 read_cst
+    {standard input}:396    .text.write_leds_green:00000000 write_leds_green
+    {standard input}:333    .text.write_leds_red:00000000 write_leds_red
+    {standard input}:203    .text.read_sw_10_5:00000000 read_sw_10_5
+    {standard input}:252    .text.add_leds_red:00000000 add_leds_red
+    {standard input}:157    .text.reptar_io_fpga_sp3:00000150 $d
+    {standard input}:165    .text.read_cst:00000000 $a
+    {standard input}:195    .text.read_cst:00000028 $d
+    {standard input}:200    .text.read_sw_10_5:00000000 $a
+    {standard input}:244    .text.read_sw_10_5:00000058 $d
+    {standard input}:249    .text.add_leds_red:00000000 $a
+    {standard input}:330    .text.write_leds_red:00000000 $a
+    {standard input}:388    .text.write_leds_red:00000090 $d
+    {standard input}:393    .text.write_leds_green:00000000 $a
+    {standard input}:451    .text.write_leds_green:00000090 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+app_startup
+printf

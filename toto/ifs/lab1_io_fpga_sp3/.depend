@@ -1,0 +1,113 @@
+stubs.o: stubs.c includes/include/linux/kconfig.h \
+ includes/include/generated/autoconf.h includes/include/common.h \
+ includes/include/config.h includes/include/config_defaults.h \
+ includes/include/config_uncmd_spl.h \
+ includes/include/configs/omap3_reptar.h \
+ includes/include/configs/ti_omap3_common.h \
+ includes/arch/arm/include/asm/arch/cpu.h \
+ includes/arch/arm/include/asm/types.h \
+ includes/arch/arm/include/asm/arch/omap.h \
+ includes/include/configs/ti_armv7_omap.h \
+ includes/include/configs/ti_armv7_common.h \
+ includes/include/config_distro_defaults.h \
+ includes/arch/arm/include/asm/config.h \
+ includes/include/config_fallbacks.h includes/include/asm-offsets.h \
+ includes/include/generated/generic-asm-offsets.h \
+ includes/include/linux/bitops.h includes/include/linux/compiler.h \
+ includes/include/linux/compiler-gcc.h \
+ includes/include/linux/compiler-gcc4.h \
+ includes/arch/arm/include/asm/bitops.h \
+ includes/arch/arm/include/asm/proc-armv/system.h \
+ includes/include/asm-generic/bitops/__fls.h \
+ includes/include/asm-generic/bitops/__ffs.h \
+ includes/include/asm-generic/bitops/fls.h \
+ includes/include/asm-generic/bitops/fls64.h \
+ includes/include/linux/types.h includes/include/linux/posix_types.h \
+ includes/include/linux/stddef.h \
+ includes/arch/arm/include/asm/posix_types.h \
+ /opt/linaro-arm-linux-gnueabihf/bin/../lib/gcc/arm-linux-gnueabihf/4.7.3/include/stdbool.h \
+ includes/include/linux/string.h includes/arch/arm/include/asm/string.h \
+ includes/include/linux/linux_string.h includes/include/linux/stringify.h \
+ includes/arch/arm/include/asm/ptrace.h \
+ includes/arch/arm/include/asm/proc-armv/ptrace.h \
+ /opt/linaro-arm-linux-gnueabihf/bin/../lib/gcc/arm-linux-gnueabihf/4.7.3/include/stdarg.h \
+ includes/include/linux/kernel.h includes/include/part.h \
+ includes/include/ide.h includes/include/part_efi.h \
+ includes/include/efi.h includes/include/flash.h includes/include/image.h \
+ includes/include/compiler.h \
+ /opt/linaro-arm-linux-gnueabihf/bin/../lib/gcc/arm-linux-gnueabihf/4.7.3/include/stddef.h \
+ includes/arch/arm/include/asm/byteorder.h \
+ includes/include/linux/byteorder/little_endian.h \
+ includes/include/linux/byteorder/swab.h \
+ includes/include/linux/byteorder/generic.h includes/include/lmb.h \
+ includes/arch/arm/include/asm/u-boot.h \
+ includes/include/asm-generic/u-boot.h includes/include/command.h \
+ includes/include/linker_lists.h \
+ includes/arch/arm/include/asm/global_data.h \
+ includes/include/asm-generic/global_data.h includes/include/membuff.h \
+ includes/include/linux/list.h includes/include/linux/poison.h \
+ includes/include/display_options.h \
+ includes/arch/arm/include/asm/mach-types.h \
+ includes/arch/arm/include/asm/setup.h \
+ includes/arch/arm/include/asm/u-boot-arm.h includes/include/uuid.h \
+ includes/include/vsprintf.h includes/include/u-boot/crc.h \
+ includes/include/net.h includes/arch/arm/include/asm/cache.h \
+ includes/arch/arm/include/asm/system.h includes/include/bootstage.h \
+ includes/include/exports.h includes/include/_exports.h \
+ includes/arch/arm/include/asm/sections.h \
+ includes/include/asm-generic/sections.h
+reptar_io_fpga_sp3.o: reptar_io_fpga_sp3.c \
+ includes/include/linux/kconfig.h includes/include/generated/autoconf.h \
+ includes/include/common.h includes/include/config.h \
+ includes/include/config_defaults.h includes/include/config_uncmd_spl.h \
+ includes/include/configs/omap3_reptar.h \
+ includes/include/configs/ti_omap3_common.h \
+ includes/arch/arm/include/asm/arch/cpu.h \
+ includes/arch/arm/include/asm/types.h \
+ includes/arch/arm/include/asm/arch/omap.h \
+ includes/include/configs/ti_armv7_omap.h \
+ includes/include/configs/ti_armv7_common.h \
+ includes/include/config_distro_defaults.h \
+ includes/arch/arm/include/asm/config.h \
+ includes/include/config_fallbacks.h includes/include/asm-offsets.h \
+ includes/include/generated/generic-asm-offsets.h \
+ includes/include/linux/bitops.h includes/include/linux/compiler.h \
+ includes/include/linux/compiler-gcc.h \
+ includes/include/linux/compiler-gcc4.h \
+ includes/arch/arm/include/asm/bitops.h \
+ includes/arch/arm/include/asm/proc-armv/system.h \
+ includes/include/asm-generic/bitops/__fls.h \
+ includes/include/asm-generic/bitops/__ffs.h \
+ includes/include/asm-generic/bitops/fls.h \
+ includes/include/asm-generic/bitops/fls64.h \
+ includes/include/linux/types.h includes/include/linux/posix_types.h \
+ includes/include/linux/stddef.h \
+ includes/arch/arm/include/asm/posix_types.h \
+ /opt/linaro-arm-linux-gnueabihf/bin/../lib/gcc/arm-linux-gnueabihf/4.7.3/include/stdbool.h \
+ includes/include/linux/string.h includes/arch/arm/include/asm/string.h \
+ includes/include/linux/linux_string.h includes/include/linux/stringify.h \
+ includes/arch/arm/include/asm/ptrace.h \
+ includes/arch/arm/include/asm/proc-armv/ptrace.h \
+ /opt/linaro-arm-linux-gnueabihf/bin/../lib/gcc/arm-linux-gnueabihf/4.7.3/include/stdarg.h \
+ includes/include/linux/kernel.h includes/include/part.h \
+ includes/include/ide.h includes/include/part_efi.h \
+ includes/include/efi.h includes/include/flash.h includes/include/image.h \
+ includes/include/compiler.h \
+ /opt/linaro-arm-linux-gnueabihf/bin/../lib/gcc/arm-linux-gnueabihf/4.7.3/include/stddef.h \
+ includes/arch/arm/include/asm/byteorder.h \
+ includes/include/linux/byteorder/little_endian.h \
+ includes/include/linux/byteorder/swab.h \
+ includes/include/linux/byteorder/generic.h includes/include/lmb.h \
+ includes/arch/arm/include/asm/u-boot.h \
+ includes/include/asm-generic/u-boot.h includes/include/command.h \
+ includes/include/linker_lists.h \
+ includes/arch/arm/include/asm/global_data.h \
+ includes/include/asm-generic/global_data.h includes/include/membuff.h \
+ includes/include/linux/list.h includes/include/linux/poison.h \
+ includes/include/display_options.h \
+ includes/arch/arm/include/asm/mach-types.h \
+ includes/arch/arm/include/asm/setup.h \
+ includes/arch/arm/include/asm/u-boot-arm.h includes/include/uuid.h \
+ includes/include/vsprintf.h includes/include/u-boot/crc.h \
+ includes/include/net.h includes/arch/arm/include/asm/cache.h \
+ includes/arch/arm/include/asm/system.h includes/include/bootstage.h

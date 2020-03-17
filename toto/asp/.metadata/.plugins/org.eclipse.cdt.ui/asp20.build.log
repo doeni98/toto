@@ -1,0 +1,12 @@
+14:38:42 **** Incremental Build of configuration Debug for project asp20 ****
+make all 
+mkdir -p build
+arm-none-eabi-gcc -c -Wall -O0 -g -I. -I/opt/cc/arm-none-eabi/include -o build/lcd_toolbox.o lcd_toolbox.c
+lcd_toolbox.c: In function 'fb_draw_line':
+lcd_toolbox.c:161:6: warning: unused variable 'delta'
+arm-none-eabi-gcc -e start  -T standalone.ld -static  -lc -L. -o build/labo_asp.elf  build/crt0_arm.o  build/newlib_stubs.o  build/main.o  build/init.o  build/lcd_toolbox.o  build/gpio_toolbox.o
+arm-none-eabi-nm --numeric-sort build/labo_asp.elf > build/labo_asp.sym
+arm-none-eabi-objdump --source --disassemble build/labo_asp.elf > build/labo_asp.dis
+
+14:38:42 Build Finished (took 112ms)
+
